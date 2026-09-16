@@ -1,0 +1,11 @@
+# Build directory
+build/
+.DS_Store
+
+# Executables
+lab2
+*.o
+*.out
+
+# Generated data files
+DATA.TXT
