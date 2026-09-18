@@ -1,95 +1,84 @@
-#ifndef LAB2_PROJECT_H_
-#define LAB2_PROJECT_H_
+#ifndef LAB3_PROJECT_H_
+#define LAB3_PROJECT_H_
 
+#include "worker.h"
 #include <fstream>
 #include <iostream>
 #include <string>
 
 // ============================================================================
-// [Requirement 1, 2] Class 1: Worker (Робітник / Член команди)
-// 8 fields: 3 public, 5 private
-// ============================================================================
-class Worker {
- public:
-  // [Requirement 2] 3 Public fields
-  int worker_id;
-  char name[50];
-  char role[30];
-
-  // Constructors
-  Worker();
-  Worker(int id, const char *name_str, const char *role_str, double rate,
-         int hours, int tasks, double budget, int rating);
-
-  // [Requirement 4] 6 Methods for Worker class
-  double CalculateSalary() const;
-  void UpdateTasks(int new_tasks);
-  void UpdateTasks(int new_tasks, double added_budget);
-  void WriteToFile(std::ofstream &file) const;
-  void ReadFromFile(std::ifstream &file);
-
-  // Manual console input method
-  void InputFromConsole();
-
-  // [Requirement 12] Method allocating random dynamic memory and sorting
-  void AllocateAndSortTaskHours(int count);
-
-  // Method to print full info
-  void PrintInfo() const;
-
-  // Getters for private fields
-  double get_allocated_budget() const { return allocated_budget_; }
-  int get_performance_rating() const { return performance_rating_; }
-
-private:
-  // [Requirement 2] 5 Private fields
-  double hourly_rate_;
-  int hours_worked_;
-  int completed_tasks_;
-  double allocated_budget_;
-  int performance_rating_; // Rating from 1 to 10
-};
-
-// ============================================================================
-// [Requirement 1, 2, 3] Class 2: Project (Проєкт)
-// 8 fields: 3 public, 5 private (includes Worker lead_worker object)
+// [Requirement 1, 2, 3, 4, 12, 13] Class Project
+// Demonstrates Composition (lead_worker_comp_) vs Aggregation
+// (lead_worker_agg_ptr_)
 // ============================================================================
 class Project {
- public:
-  // [Requirement 2] 3 Public fields
+public:
+  // [Requirement 2] Public fields
   int project_id;
   char title[60];
-  char status[20]; // "Planned", "In Progress", "Completed"
+  char status[20];
 
-  // Constructors
+  // [Requirement 4] Static member variable
+  static int total_projects_count;
+
+  // [Requirement 1, 10] Constructors
   Project();
   Project(int id, const char *title_str, const char *status_str, double budget,
           double expenses, int team_sz, int duration);
 
-  // [Requirement 4] 6 Methods for Project class
-  void AssignLeadWorker(const Worker &lead);
-  Worker GetLeadWorker() const;
+  // [Requirement 1, 10] Copy Constructor
+  Project(const Project &other);
+
+  // Copy Assignment Operator
+  Project &operator=(const Project &other);
+
+  // [Requirement 3] Destructor with block tracking
+  ~Project();
+
+  // [Requirement 4] Static member method
+  static void PrintTotalProjects();
+
+  // [Requirement 13] Composition scenario (object embedded by value)
+  void AssignLeadWorkerComposition(const Worker &lead);
+
+  // [Requirement 12] Aggregation scenario (pointer to independent object)
+  void AssignLeadWorkerAggregation(Worker *lead_ptr);
+
+  // Method returning class object
+  Worker GetLeadWorkerComposition() const;
+
+  // Overloaded status update methods
   void UpdateStatus(const char *new_status);
   void UpdateStatus(const char *new_status, double added_expense);
+
+  // File I/O
   void WriteToFile(std::ofstream &file) const;
   void ReadFromFile(std::ifstream &file);
 
-  // Manual console input method
   void InputFromConsole();
-
-  // [Requirement 12] Method allocating random dynamic memory and sorting
   void AllocateAndSortExpensesHistory(int count);
-
-  // Print full project details
   void PrintInfo() const;
 
+  // Getters
+  double get_total_budget() const { return total_budget_; }
+  double get_current_expenses() const { return current_expenses_; }
+
 private:
-  // [Requirement 2, 3] 5 Private fields (including Worker lead_worker_)
+  // Private fields
   double total_budget_;
   double current_expenses_;
   int team_size_;
-  Worker lead_worker_; // [Requirement 3] Object composition without friend
+
+  // [Requirement 13] Composition (lifetime tied to Project)
+  Worker lead_worker_comp_;
+
+  // [Requirement 12] Aggregation (pointer to independent external Worker)
+  Worker *lead_worker_agg_ptr_;
+
   int duration_days_;
+
+  // [Requirement 2] Constant member variable set via Member Initializer List
+  const int creation_year_;
 };
 
-#endif // LAB2_PROJECT_H_
+#endif // LAB3_PROJECT_H_
