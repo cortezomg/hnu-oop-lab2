@@ -80,13 +80,13 @@ int main() {
   std::cout
       << "\n>>> [Пункт 8 & 10] Демонстрація 3 способів створення об'єктів...\n";
 
-  // Спосіб 1: Простий (Simple creation)
+  // Спосіб 1: Простий
   Worker w_simple(101, "Олександр Коваленко", "Lead Developer", 45.0, 160, 20,
                   5000.0, 9);
   std::cout << "1. Простий спосіб (Worker w_simple(...)):\n";
   w_simple.PrintInfo();
 
-  // Спосіб 2: Явний (Explicit creation via assignment)
+  // Спосіб 2: Явний
   Worker w_explicit =
       Worker(102, "Марія Мельник", "QA Automation", 30.0, 150, 15, 3000.0, 8);
   std::cout << "2. Явний спосіб (Worker w_explicit = Worker(...)):\n";
@@ -133,15 +133,14 @@ int main() {
   std::cout << "\n>>> [Пункт 9] Створення об'єктів у статичній та динамічній "
                "пам'яті...\n";
 
-  // Динамічний об'єкт у кучі (Heap)
-  Project *p_dyn1 = new Project(1, "E-Commerce Platform", "In Progress",
-                                50000.0, 12000.0, 8, 90);
+  // Об'єкт у статичній/автоматичній пам'яті на стеку (Requirement 9)
+  Project p_stat(1, "E-Commerce Platform", "In Progress", 50000.0, 12000.0, 8, 90);
   Project *p_dyn2 =
       new Project(2, "Mobile Banking App", "Planned", 80000.0, 5000.0, 12, 120);
 
-  // Покажчик на екземпляр класу (Requirement 9)
-  Project *ptr_proj = p_dyn1;
-  std::cout << "Покажчик ptr_proj вказує на динамічний проєкт: "
+  // Покажчик на екземпляр класу (Requirement 9) через оператор &
+  Project *ptr_proj = &p_stat;
+  std::cout << "Покажчик ptr_proj вказує на проєкт на стеку: "
             << ptr_proj->title << "\n";
   ptr_proj->PrintInfo();
 
@@ -150,16 +149,16 @@ int main() {
   // ==========================================================================
   std::cout << "\n>>> [Пункт 13] Демонстрація взаємодії за КОМПОЗИЦІЄЮ "
                "(Composition)...\n";
-  p_dyn1->AssignLeadWorkerComposition(w_simple);
-  p_dyn1->PrintInfo();
+  ptr_proj->AssignLeadWorkerComposition(w_simple);
+  ptr_proj->PrintInfo();
 
   // ==========================================================================
   // [Requirement 12] Сценарій взаємодії за АГРЕГАЦІЄЮ
   // ==========================================================================
   std::cout << "\n>>> [Пункт 12] Демонстрація взаємодії за АГРЕГАЦІЄЮ "
                "(Aggregation)...\n";
-  p_dyn1->AssignLeadWorkerAggregation(&w_explicit);
-  p_dyn1->PrintInfo();
+  ptr_proj->AssignLeadWorkerAggregation(&w_explicit);
+  ptr_proj->PrintInfo();
 
   // ==========================================================================
   // [Requirement 11] Клас Асоціацій (Взаємодія 3-х об'єктів)
@@ -173,7 +172,7 @@ int main() {
 
   // Клас асоціацій пов'язує 3 об'єкти: Project, Manager (Worker 1), Assignee
   // (Worker 2)
-  TaskAssignment assignment1(501, "Розробка платежного модуля API", 40, p_dyn1,
+  TaskAssignment assignment1(501, "Розробка платежного модуля API", 40, ptr_proj,
                              &manager_obj, &w_simple);
   assignment1.PrintInfo();
 
@@ -184,23 +183,22 @@ int main() {
                "перевантаженої версії...\n";
 
   // Виклик функції за значенням (Requirement 5)
-  CalculateProjectEfficiency(*p_dyn1);
+  CalculateProjectEfficiency(p_stat);
 
   // Виклик перевантаженої функції за вказівником (Requirement 6)
-  CalculateProjectEfficiency(p_dyn1);
+  CalculateProjectEfficiency(ptr_proj);
 
   // ==========================================================================
   // [Requirement 7] Функція, що повертає об'єкт класу
   // ==========================================================================
   std::cout << "\n>>> [Пункт 7] Виклик функції, яка повертає об'єкт класу...\n";
-  Project upgraded_p = UpgradeProjectBudget(*p_dyn1, 15000.0);
+  Project upgraded_p = UpgradeProjectBudget(p_stat, 15000.0);
   upgraded_p.PrintInfo();
 
   // ==========================================================================
   // Очищення динамічної пам'яті (delete)
   // ==========================================================================
   std::cout << "\n>>> Очищення динамічних об'єктів...\n";
-  delete p_dyn1;
   delete p_dyn2;
 
   std::cout
