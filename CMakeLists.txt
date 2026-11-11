@@ -18,4 +18,10 @@ add_executable(oop_project
   team_lead.cpp
   customer.cpp
   block_tracker.cpp
+  resource.cpp
+  equipment.cpp
+  software_license.cpp
+  material.cpp
+  workstation.cpp
+  resource_registry.cpp
 )
