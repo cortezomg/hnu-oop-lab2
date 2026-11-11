@@ -17,6 +17,9 @@ Worker::Worker()
   std::strncpy(role, "None", sizeof(role) - 1);
   role[sizeof(role) - 1] = '\0';
   total_workers_count++;
+  // [ЛР4, п.7] Відстеження порядку виклику конструкторів
+  std::cout << "  [Constructor] Створено об'єкт Worker #" << worker_id << " ("
+            << name << ")\n";
 }
 
 // [Requirement 1, 2, 10] Parameterized Constructor (uses Initializer List for
@@ -31,6 +34,9 @@ Worker::Worker(int id, const char *name_str, const char *role_str, double rate,
   std::strncpy(role, role_str, sizeof(role) - 1);
   role[sizeof(role) - 1] = '\0';
   total_workers_count++;
+  // [ЛР4, п.7] Відстеження порядку виклику конструкторів
+  std::cout << "  [Constructor] Створено об'єкт Worker #" << worker_id << " ("
+            << name << ")\n";
 }
 
 // [Requirement 1, 10] Copy Constructor

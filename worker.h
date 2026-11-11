@@ -11,6 +11,8 @@
 // ============================================================================
 class Worker {
 public:
+  // [ЛР4, п.2] Три відкриті дані базового класу (worker_id, name, role), доступ
+  // до яких змінюється залежно від способу наслідування
   // [Requirement 2] Public fields
   int worker_id;
   char name[50];
@@ -36,6 +38,9 @@ public:
   // [Requirement 4] Static member method
   static void PrintTotalWorkers();
 
+  // [ЛР4, п.2] Три відкриті методи базового класу (CalculateSalary,
+  // UpdateTasks, PrintInfo), доступ до яких змінюється залежно від способу
+  // наслідування
   // Member methods
   double CalculateSalary() const;
   void UpdateTasks(int new_tasks);
@@ -51,11 +56,14 @@ public:
   int get_performance_rating() const { return performance_rating_; }
   int get_creation_year() const { return creation_year_; }
 
-private:
-  // Private fields
+protected:
+  // [ЛР4, п.2] Захищені дані: доступні в похідних класах, але не ззовні
   double hourly_rate_;
   int hours_worked_;
   int completed_tasks_;
+
+private:
+  // Private fields
   double allocated_budget_;
   int performance_rating_;
 
