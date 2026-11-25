@@ -26,6 +26,7 @@
 #include "resource_pool.h"
 #include "resource_registry.h"
 #include "software_license.h"
+#include "stl_demo.h"
 #include "team_lead.h"
 #include "worker.h"
 #include "workstation.h"
@@ -1187,7 +1188,8 @@ int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
   std::string choice;
-  std::cout << "Оберіть демонстрацію (3 - ЛР3, 4 - ЛР4, 5 - ЛР5, 6 - ЛР6): ";
+  std::cout << "Оберіть демонстрацію (3 - ЛР3, 4 - ЛР4, 5 - ЛР5, 6 - ЛР6, "
+               "7 - ЛР7): ";
   std::getline(std::cin, choice);
   std::cout << "\n";
 
@@ -1197,6 +1199,8 @@ int main(int argc, char *argv[]) {
     RunLab4Demo();
   } else if (choice == "6") {
     RunLab6Demo();
+  } else if (choice == "7") {
+    RunLab7Demo();
   } else {
     RunLab5Demo();
 

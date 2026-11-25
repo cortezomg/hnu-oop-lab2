@@ -25,4 +25,6 @@ add_executable(oop_project
   workstation.cpp
   resource_registry.cpp
   expense.cpp
+  project_task.cpp
+  stl_demo.cpp
 )
