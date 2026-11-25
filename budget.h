@@ -15,6 +15,18 @@ public:
   Budget(const Budget &other);
   ~Budget();
 
+  // [ЛР6, п.2] Перевантаження бінарних операцій як функцій-членів класу
+  Budget operator+(const Budget &other) const;  // об'єднання двох бюджетів
+  Budget operator+(double amount) const;        // додаткове фінансування
+  Budget operator-(double amount) const;        // скорочення фінансування
+
+  // [ЛР6, п.3] Оператори *, =, +=, -=, *= як функції-члени класу
+  Budget operator*(double factor) const;  // індексація бюджету на коефіцієнт
+  Budget &operator=(const Budget &other);
+  Budget &operator+=(double amount);
+  Budget &operator-=(double amount);
+  Budget &operator*=(double factor);
+
   bool Spend(double amount);
   bool Reserve(double amount);
   double GetAvailable() const;
@@ -23,6 +35,7 @@ public:
 
   double get_total_amount() const { return total_amount_; }
   double get_spent_amount() const { return spent_amount_; }
+  const std::string &get_budget_name() const { return budget_name_; }
 
 private:
   int budget_id_;

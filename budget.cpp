@@ -1,6 +1,7 @@
 #include "budget.h"
 
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 Budget::Budget()
@@ -36,6 +37,102 @@ Budget::Budget(const Budget &other)
 Budget::~Budget() {
   std::cout << "  [Destructor] Знищено об'єкт Budget #" << budget_id_ << " ("
             << budget_name_ << ")\n";
+}
+
+// [ЛР6, п.2] Бінарний + : об'єднання бюджетів однієї валюти в новий об'єкт
+Budget Budget::operator+(const Budget &other) const {
+  if (currency_ != other.currency_) {
+    throw std::invalid_argument("Budget +: не можна об'єднати бюджети в "
+                                "різних валютах (" +
+                                currency_ + " і " + other.currency_ + ")");
+  }
+  Budget result(*this);
+  result.budget_name_ = budget_name_ + " + " + other.budget_name_;
+  result.total_amount_ += other.total_amount_;
+  result.spent_amount_ += other.spent_amount_;
+  result.reserved_amount_ += other.reserved_amount_;
+  result.transactions_count_ += other.transactions_count_;
+  return result;
+}
+
+// [ЛР6, п.2] Бінарні + та - з числом реалізовано через += та -=;
+// вихідний об'єкт не змінюється
+Budget Budget::operator+(double amount) const {
+  Budget result(*this);
+  result += amount;
+  return result;
+}
+
+Budget Budget::operator-(double amount) const {
+  Budget result(*this);
+  result -= amount;
+  return result;
+}
+
+// [ЛР6, п.3] Оператор * : новий бюджет, проіндексований на коефіцієнт
+Budget Budget::operator*(double factor) const {
+  Budget result(*this);
+  result *= factor;
+  return result;
+}
+
+// [ЛР6, п.3] Оператор присвоєння: перевірка самоприсвоєння, повернення *this
+// для ланцюжка a = b = c
+Budget &Budget::operator=(const Budget &other) {
+  if (this != &other) {
+    budget_id_ = other.budget_id_;
+    budget_name_ = other.budget_name_;
+    currency_ = other.currency_;
+    total_amount_ = other.total_amount_;
+    spent_amount_ = other.spent_amount_;
+    reserved_amount_ = other.reserved_amount_;
+    fiscal_year_ = other.fiscal_year_;
+    transactions_count_ = other.transactions_count_;
+    std::cout << "  [operator=] Бюджету присвоєно значення '" << budget_name_
+              << "'\n";
+  } else {
+    std::cout << "  [operator=] Самоприсвоєння '" << budget_name_
+              << "' — копіювання пропущено\n";
+  }
+  return *this;
+}
+
+// [ЛР6, п.3] Складені оператори змінюють сам об'єкт і повертають посилання
+Budget &Budget::operator+=(double amount) {
+  if (amount < 0) {
+    throw std::invalid_argument("Budget +=: сума не може бути від'ємною");
+  }
+  total_amount_ += amount;
+  transactions_count_++;
+  return *this;
+}
+
+Budget &Budget::operator-=(double amount) {
+  if (amount < 0) {
+    throw std::invalid_argument("Budget -=: сума не може бути від'ємною");
+  }
+  if (total_amount_ - amount < spent_amount_ + reserved_amount_) {
+    throw std::invalid_argument("Budget -=: не можна скоротити '" +
+                                budget_name_ +
+                                "' нижче витрачених і зарезервованих коштів");
+  }
+  total_amount_ -= amount;
+  transactions_count_++;
+  return *this;
+}
+
+Budget &Budget::operator*=(double factor) {
+  if (factor <= 0) {
+    throw std::invalid_argument("Budget *=: коефіцієнт має бути додатним");
+  }
+  if (total_amount_ * factor < spent_amount_ + reserved_amount_) {
+    throw std::invalid_argument("Budget *=: не можна скоротити '" +
+                                budget_name_ +
+                                "' нижче витрачених і зарезервованих коштів");
+  }
+  total_amount_ *= factor;
+  transactions_count_++;
+  return *this;
 }
 
 bool Budget::Spend(double amount) {

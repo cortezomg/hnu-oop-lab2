@@ -48,6 +48,16 @@ Resource *ResourceRegistry::GetDynamic(int index) const {
   return dynamic_items_[index];
 }
 
+// [ЛР6, п.3] Оператор [] повертає посилання, тому через нього можна
+// викликати і неконстантні методи об'єкта
+Resource &ResourceRegistry::operator[](int index) {
+  return *GetDynamic(index);
+}
+
+const Resource &ResourceRegistry::operator[](int index) const {
+  return *GetDynamic(index);
+}
+
 void ResourceRegistry::RemoveDynamic(int index) {
   Resource *resource = GetDynamic(index);
   for (int i = index; i < dynamic_count_ - 1; ++i) {

@@ -11,9 +11,11 @@
 #include "assignment.h"
 #include "block_tracker.h"
 #include "budget.h"
+#include "catalog.h"
 #include "contractor.h"
 #include "customer.h"
 #include "equipment.h"
+#include "expense.h"
 #include "intern.h"
 #include "manager.h"
 #include "material.h"
@@ -898,13 +900,294 @@ void RunLab5Menu() {
                "залишились\n";
 }
 
+// [ЛР6, п.4] Звичайна функція — передається в шаблонну CountIf як вказівник
+bool IsMaterial(const Resource &resource) {
+  return resource.GetCategory() == "Material";
+}
+
+// [ЛР6, п.4] Функтор (клас з operator()) — ще один тип-аргумент для CountIf
+class CostAbove {
+public:
+  explicit CostAbove(double limit) : limit_(limit) {}
+  bool operator()(const Resource &resource) const {
+    return resource.CalculateCost() > limit_;
+  }
+
+private:
+  double limit_;
+};
+
+void RunLab6Demo() {
+  std::cout << "==============================================================="
+               "=========\n";
+  std::cout << "  ЛАБОРАТОРНА РОБОТА №6 - ПЕРЕВАНТАЖЕННЯ ОПЕРАЦІЙ ТА ШАБЛОНИ    "
+               "         \n";
+  std::cout << "==============================================================="
+               "=========\n\n";
+  BlockTracker demo_block("RunLab6Demo");
+
+  // ==========================================================================
+  // [ЛР6, п.1] Унарні операції ++ та -- (префіксна і постфіксна форми)
+  // ==========================================================================
+  std::cout << "\n>>> [ЛР6, п.1] Унарні операції ++ та -- для Worker "
+               "(кількість виконаних задач)\n";
+  {
+    BlockTracker block("Унарні операції");
+    Worker tester(120, "Ірина Савчук", "QA Engineer", 35.0, 80, 5, 0.0, 8);
+    std::cout << "  Початково задач: " << tester.get_completed_tasks() << "\n";
+
+    std::cout << "  ++tester (префіксна форма, без копії):\n";
+    Worker &same = ++tester;
+    std::cout << "    результат — той самий об'єкт: "
+              << (&same == &tester ? "так" : "ні")
+              << ", задач: " << tester.get_completed_tasks() << "\n";
+
+    std::cout << "  tester++ (постфіксна форма, повертає копію старого "
+                 "стану):\n";
+    Worker before_increment = tester++;
+    std::cout << "    повернуто: " << before_increment.get_completed_tasks()
+              << ", об'єкт тепер: " << tester.get_completed_tasks() << "\n";
+
+    std::cout << "  --tester:\n";
+    --tester;
+    std::cout << "    задач: " << tester.get_completed_tasks() << "\n";
+
+    std::cout << "  tester--:\n";
+    Worker before_decrement = tester--;
+    std::cout << "    повернуто: " << before_decrement.get_completed_tasks()
+              << ", об'єкт тепер: " << tester.get_completed_tasks() << "\n";
+
+    std::cout << "  ++(++tester) — префіксна форма повертає посилання, тому "
+                 "її можна повторювати:\n";
+    ++(++tester);
+    std::cout << "    задач: " << tester.get_completed_tasks() << "\n";
+    std::cout << "  -- Кінець блоку\n";
+  }
+
+  // ==========================================================================
+  // [ЛР6, п.2] Бінарні операції + та -
+  // ==========================================================================
+  std::cout << "\n>>> [ЛР6, п.2] Бінарні операції + та - для Budget\n";
+  Budget development(601, "Розробка", "USD", 20000.0, 5000.0, 1000.0, 2026);
+  Budget marketing(602, "Маркетинг", "USD", 8000.0, 2000.0, 0.0, 2026);
+  development.PrintInfo();
+  marketing.PrintInfo();
+  {
+    BlockTracker block("Бінарні операції");
+    std::cout << "  development + marketing (об'єднання бюджетів):\n";
+    Budget merged = development + marketing;
+    merged.PrintInfo();
+
+    std::cout << "  development + 5000 (додаткове фінансування):\n";
+    Budget extended = development + 5000.0;
+    extended.PrintInfo();
+
+    std::cout << "  development - 3000 (скорочення фінансування):\n";
+    Budget reduced = development - 3000.0;
+    reduced.PrintInfo();
+    std::cout << "  Вихідний бюджет не змінився:\n";
+    development.PrintInfo();
+
+    std::cout << "  marketing - 7000 (менше, ніж уже витрачено):\n";
+    try {
+      Budget too_small = marketing - 7000.0;
+      too_small.PrintInfo();
+    } catch (const std::invalid_argument &e) {
+      std::cout << "  [catch invalid_argument] " << e.what() << "\n";
+    }
+
+    std::cout << "  development + бюджет у EUR:\n";
+    Budget grant(603, "Грант", "EUR", 10000.0, 0.0, 0.0, 2026);
+    try {
+      Budget mixed = development + grant;
+      mixed.PrintInfo();
+    } catch (const std::invalid_argument &e) {
+      std::cout << "  [catch invalid_argument] " << e.what() << "\n";
+    }
+    std::cout << "  -- Кінець блоку\n";
+  }
+
+  // ==========================================================================
+  // [ЛР6, п.3] Оператори *, =, +=, -=, *=, []
+  // ==========================================================================
+  std::cout << "\n>>> [ЛР6, п.3] Оператори *, =, +=, -=, *= для Budget\n";
+  {
+    BlockTracker block("Оператори *, =, +=, -=, *=");
+    std::cout << "  marketing * 1.1 (індексація на 10%):\n";
+    Budget indexed = marketing * 1.1;
+    indexed.PrintInfo();
+
+    std::cout << "  Budget plan; plan = development; (присвоєння, не "
+                 "ініціалізація):\n";
+    Budget plan;
+    plan = development;
+    plan.PrintInfo();
+
+    std::cout << "  plan += 2500:\n";
+    plan += 2500.0;
+    plan.PrintInfo();
+    std::cout << "  plan -= 1000:\n";
+    plan -= 1000.0;
+    plan.PrintInfo();
+    std::cout << "  plan *= 1.05:\n";
+    plan *= 1.05;
+    plan.PrintInfo();
+    std::cout << "  (plan += 500) *= 2 — складені оператори повертають "
+                 "посилання:\n";
+    (plan += 500.0) *= 2.0;
+    plan.PrintInfo();
+    std::cout << "  plan = plan (самоприсвоєння безпечне):\n";
+    Budget &plan_ref = plan;
+    plan = plan_ref;
+    std::cout << "  -- Кінець блоку\n";
+  }
+
+  std::cout << "\n>>> [ЛР6, п.3] Оператор [] для ResourceRegistry\n";
+  Material cable(701, "Кабель UTP", "Molex", 50, 3.5, 2026, "m", 10, false);
+  Equipment router(702, "Маршрутизатор", "Cisco", 2, 750.0, 2026, "CS-2201",
+                   24, 6, 50.0);
+  Worker owner(121, "Тарас Гнатюк", "DevOps Engineer", 45.0, 90, 6, 0.0, 9);
+  {
+    BlockTracker block("Реєстр ресурсів");
+    ResourceRegistry registry;
+    registry.AddStatic(&cable);
+    registry.AddStatic(&router);
+    registry.AddDynamic(new SoftwareLicense(703, "JetBrains All Products",
+                                            "JetBrains", 5, 290.0, 2026,
+                                            "JB-5501", 12, 0.0));
+    registry.AddDynamic(new Material(704, "Термопаста", "Arctic", 10, 8.0,
+                                     2026, "tube", 2, false));
+    registry.AddDynamic(new Equipment(705, "Сервер HPE ProLiant", "HPE", 1,
+                                      5400.0, 2026, "HP-7781", 36, 6, 400.0));
+
+    std::cout << "  registry[0] (індексуються динамічні об'єкти):\n";
+    registry[0].PrintInfo();
+    std::cout << "  registry[2].AssignTo(&owner) — [] повертає посилання:\n";
+    registry[2].AssignTo(&owner);
+    registry[2].PrintInfo();
+    std::cout << "  registry[7]:\n";
+    try {
+      registry[7].PrintInfo();
+    } catch (const std::out_of_range &e) {
+      std::cout << "  [catch out_of_range] " << e.what() << "\n";
+    }
+
+    // ========================================================================
+    // [ЛР6, п.4] Шаблонна функція-член CountIf з трьома різними типами умов
+    // ========================================================================
+    std::cout << "\n>>> [ЛР6, п.4] Шаблонна функція CountIf<Predicate>\n";
+    int expensive = registry.CountIf([](const Resource &resource) {
+      return resource.CalculateCost() > 1000.0;
+    });
+    std::cout << "  Лямбда (вартість > 1000): " << expensive << "\n";
+    std::cout << "  Вказівник на функцію IsMaterial: "
+              << registry.CountIf(IsMaterial) << "\n";
+    std::cout << "  Функтор CostAbove(5000): "
+              << registry.CountIf(CostAbove(5000.0)) << "\n";
+    std::cout << "  Явне задання типу CountIf<bool (*)(const Resource &)>: "
+              << registry.CountIf<bool (*)(const Resource &)>(IsMaterial)
+              << "\n";
+    std::cout << "  -- Кінець блоку: реєстр видаляє динамічні об'єкти\n";
+  }
+
+  // ==========================================================================
+  // [ЛР6, п.5] Шаблон класу Catalog<T> зі стандартними типами
+  // ==========================================================================
+  std::cout << "\n>>> [ЛР6, п.5] Шаблон класу Catalog<T>\n";
+  std::cout << "  Catalog<int> — оцінки задач у story points:\n";
+  Catalog<int> story_points("Оцінки задач спринту");
+  story_points.Add(3);
+  story_points.Add(5);
+  story_points.Add(8);  // місткість 2 — масив розширюється
+  story_points.Add(2);
+  story_points.Print();
+  std::cout << "  Найбільша оцінка: " << story_points.FindMax()
+            << ", сума: " << story_points.Total()
+            << ", є оцінка 5: " << (story_points.Contains(5) ? "так" : "ні")
+            << "\n";
+  story_points[3] = 13;
+  std::cout << "  story_points[3] = 13 -> " << story_points[3] << "\n";
+  std::cout << "  RemoveAt(0) повернув " << story_points.RemoveAt(0) << "\n";
+  story_points.Print();
+
+  std::cout << "\n  Catalog<double> — відпрацьовані години:\n";
+  Catalog<double> hours("Години за тиждень", 5);
+  hours.Add(7.5);
+  hours.Add(8.0);
+  hours.Add(6.25);
+  hours.Print();
+  std::cout << "  Разом годин: " << hours.Total() << "\n";
+
+  std::cout << "\n  Catalog<std::string> — етапи проєкту:\n";
+  Catalog<std::string> stages("Етапи проєкту");
+  stages.Add("Аналіз");
+  stages.Add("Проєктування");
+  stages.Add("Розробка");
+  stages.Add("Тестування");
+  stages.Print();
+  std::cout << "  Є етап \"Розробка\": "
+            << (stages.Contains("Розробка") ? "так" : "ні") << "\n";
+  std::cout << "  Копія каталогу (глибоке копіювання):\n";
+  Catalog<std::string> stages_copy(stages);
+  stages_copy[0] = "Збір вимог";
+  std::cout << "    оригінал[0] = " << stages[0]
+            << ", копія[0] = " << stages_copy[0] << "\n";
+
+  std::cout << "\n  Виняткові ситуації шаблону:\n";
+  try {
+    Catalog<int> empty_catalog("Порожній");
+    std::cout << empty_catalog.FindMax() << "\n";
+  } catch (const std::underflow_error &e) {
+    std::cout << "  [catch underflow_error] " << e.what() << "\n";
+  }
+  try {
+    std::cout << stages[10] << "\n";
+  } catch (const std::out_of_range &e) {
+    std::cout << "  [catch out_of_range] " << e.what() << "\n";
+  }
+  try {
+    Catalog<double> broken("Некоректний", 0);
+  } catch (const std::invalid_argument &e) {
+    std::cout << "  [catch invalid_argument] " << e.what() << "\n";
+  }
+
+  // ==========================================================================
+  // [ЛР6, п.6] Користувацький клас Expense як параметр шаблона
+  // ==========================================================================
+  std::cout << "\n>>> [ЛР6, п.6] Catalog<Expense> — користувацький тип як "
+               "параметр шаблона\n";
+  Catalog<Expense> expenses("Витрати проєкту", 3);
+  expenses.Add(Expense("Хмарний хостинг", "Інфраструктура", 1200.0));
+  expenses.Add(Expense("Ліцензії IDE", "Програмне забезпечення", 1450.0));
+  expenses.Add(Expense("Сервер", "Інфраструктура", 5400.0));
+  expenses.Add(Expense("Навчання команди", "Персонал", 800.0));
+  expenses.Print();
+  std::cout << "  FindMax (operator<): " << expenses.FindMax() << "\n";
+  std::cout << "  Total (operator+): " << expenses.Total() << "\n";
+  std::cout << "  Contains (operator==) \"Сервер\": "
+            << (expenses.Contains(
+                    Expense("Сервер", "Інфраструктура", 5400.0))
+                    ? "так"
+                    : "ні")
+            << "\n";
+  expenses.RemoveAt(3);
+  std::cout << "  Після RemoveAt(3), останній видалений: "
+            << expenses.last_removed() << "\n";
+
+  std::cout << "  Списання загальної суми витрат з бюджету development:\n";
+  development.Spend(expenses.Total().get_amount());
+  development.PrintInfo();
+  std::cout << "\n>>> Кінець демонстрації ЛР6: деструктори локальних "
+               "об'єктів\n";
+}
+
 // [ЛР5, п.7] Ім'я файлу задається параметром командного рядка
 int main(int argc, char *argv[]) {
   std::setlocale(LC_ALL, "");
   std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
   std::string choice;
-  std::cout << "Оберіть демонстрацію (3 - ЛР3, 4 - ЛР4, 5 - ЛР5): ";
+  std::cout << "Оберіть демонстрацію (3 - ЛР3, 4 - ЛР4, 5 - ЛР5, 6 - ЛР6): ";
   std::getline(std::cin, choice);
   std::cout << "\n";
 
@@ -912,6 +1195,8 @@ int main(int argc, char *argv[]) {
     RunLab3Demo();
   } else if (choice == "4") {
     RunLab4Demo();
+  } else if (choice == "6") {
+    RunLab6Demo();
   } else {
     RunLab5Demo();
 

@@ -22,6 +22,31 @@ public:
   Resource *GetDynamic(int index) const;
   void RemoveDynamic(int index);
 
+  // [ЛР6, п.3] Оператор [] як функція-член: доступ до динамічного об'єкта за
+  // індексом з перевіркою меж (виняток out_of_range, як у GetDynamic)
+  Resource &operator[](int index);
+  const Resource &operator[](int index) const;
+
+  // [ЛР6, п.4] Шаблонна функція-член: рахує статичні та динамічні ресурси,
+  // що задовольняють умову. Predicate — будь-який тип, який можна викликати
+  // як функцію (лямбда, вказівник на функцію, функтор); компілятор створює
+  // окрему версію функції для кожного такого типу
+  template <typename Predicate>
+  int CountIf(Predicate predicate) const {
+    int count = 0;
+    for (int i = 0; i < static_count_; ++i) {
+      if (predicate(*static_items_[i])) {
+        ++count;
+      }
+    }
+    for (int i = 0; i < dynamic_count_; ++i) {
+      if (predicate(*dynamic_items_[i])) {
+        ++count;
+      }
+    }
+    return count;
+  }
+
   // [ЛР5, п.6] Видалення з масивів за критерієм: статичні — за категорією,
   // динамічні — за вартістю, що перевищує ліміт бюджету
   int Service_Static(const std::string &category);

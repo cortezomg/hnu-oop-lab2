@@ -74,6 +74,34 @@ Worker &Worker::operator=(const Worker &other) {
   return *this;
 }
 
+// [ЛР6, п.1] Префіксний ++: спочатку змінює об'єкт, потім повертає його
+Worker &Worker::operator++() {
+  ++completed_tasks_;
+  return *this;
+}
+
+// [ЛР6, п.1] Постфіксний ++: зберігає копію, змінює об'єкт, повертає копію
+Worker Worker::operator++(int) {
+  Worker old_state(*this);
+  ++(*this);
+  return old_state;
+}
+
+// [ЛР6, п.1] Префіксний --: кількість задач не може стати від'ємною
+Worker &Worker::operator--() {
+  if (completed_tasks_ > 0) {
+    --completed_tasks_;
+  }
+  return *this;
+}
+
+// [ЛР6, п.1] Постфіксний --
+Worker Worker::operator--(int) {
+  Worker old_state(*this);
+  --(*this);
+  return old_state;
+}
+
 // [Requirement 3] Destructor with block tracking
 Worker::~Worker() {
   total_workers_count--;

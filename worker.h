@@ -35,6 +35,15 @@ public:
   // [Requirement 3] Destructor with block entrance/exit tracking
   ~Worker();
 
+  // [ЛР6, п.1] Перевантаження унарних операцій як функцій-членів класу:
+  // ++ — робітник виконав ще одну задачу, -- — одну задачу скасовано.
+  // Префіксна форма повертає посилання на змінений об'єкт, постфіксна
+  // (з фіктивним параметром int) — копію стану до зміни
+  Worker &operator++();
+  Worker operator++(int);
+  Worker &operator--();
+  Worker operator--(int);
+
   // [Requirement 4] Static member method
   static void PrintTotalWorkers();
 
@@ -55,6 +64,7 @@ public:
   double get_allocated_budget() const { return allocated_budget_; }
   int get_performance_rating() const { return performance_rating_; }
   int get_creation_year() const { return creation_year_; }
+  int get_completed_tasks() const { return completed_tasks_; }
 
 protected:
   // [ЛР4, п.2] Захищені дані: доступні в похідних класах, але не ззовні

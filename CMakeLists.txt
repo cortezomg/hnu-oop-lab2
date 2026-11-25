@@ -24,4 +24,5 @@ add_executable(oop_project
   material.cpp
   workstation.cpp
   resource_registry.cpp
+  expense.cpp
 )
